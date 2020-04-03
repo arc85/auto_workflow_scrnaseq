@@ -13,6 +13,7 @@ args <- strsplit(cli,"=",fixed=T)
 arg.val <- as.factor(args[[1]][2])
 arg.name <- args[[1]][1]
 assign(arg.name,arg.val)
+metadata.file <- as.character(args[[2]][2])
 ```
 
 ```{r echo=FALSE}
@@ -37,7 +38,7 @@ set.seed(02221989)
 files.to.read <- list.files("feature_bc_matrices")
 raw.dat <- Read10X(paste(getwd(),"feature_bc_matrices",files.to.read,sep="/"))
 
-metadata <- data.frame(samples=files.to.read,chemistry=c("3prime","5prime"))
+metadata <- read.csv(metadata.file,sep="\t")
 
 num.samples <- nrow(metadata)
 dim.raw.dat <- dim(raw.dat)

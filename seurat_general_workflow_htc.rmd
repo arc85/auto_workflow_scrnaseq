@@ -1,0 +1,83 @@
+---
+title: "10X Seurat Workflow"
+author: "Anthony Cillo"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Read in external arguments
+
+```{r}
+cli <- commandArgs(trailingOnly=T)
+args <- strsplit(cli,"=",fixed=T)
+arg.val <- as.factor(args[[1]][2])
+arg.name <- args[[1]][1]
+assign(arg.name,arg.val)
+```
+
+```{r echo=FALSE}
+if (integration=="NO") {
+read_chunk('02_analysis_no_integration.R')
+} else {
+read_chunk('03_analysis_with_integration.R')
+}
+```
+
+# Read data into Seurat and Create Metadata
+
+```{r,fig.width=7,fig.asp=0.618,out.width="70%",fig.align="center",linewidth=60}
+
+#Load Seurat v3
+library(Seurat)
+
+#Set seed for reproducibility
+set.seed(02221989)
+
+#Read in raw data
+files.to.read <- list.files("feature_bc_matrices")
+raw.dat <- Read10X(paste(getwd(),"feature_bc_matrices",files.to.read,sep="/"))
+
+metadata <- data.frame(samples=files.to.read,chemistry=c("3prime","5prime"))
+
+num.samples <- nrow(metadata)
+dim.raw.dat <- dim(raw.dat)
+
+#Create metadata
+source('01_metadata_constructor.R')
+
+overall.meta <- metadata.constructor(raw.data=raw.dat,metadata=metadata)
+
+dat <- CreateSeuratObject(counts=raw.dat[[1]],meta.data=overall.meta)
+dat[["CITEseq"]] <- CreateAssayObject(counts=raw.dat[[2]])
+
+```
+
+# Overall Workflow
+
+```{r,fig.width=7,fig.asp=0.618,out.width="70%",fig.align="center",linewidth=60}
+
+<<pcaPlot>>
+<<cluster>>
+
+```
+
+```{r,fig.width=7,fig.asp=0.618,out.width="70%",fig.align="center",linewidth=60}
+
+#Visualization
+
+if (integration=="NO") {
+  dat.clustered <- dat
+  group.vec <- c("RNA_snn_res.0.3","RNA_snn_res.0.5","RNA_snn_res.0.7","RNA_snn_res.0.1")
+} else {
+  dat.clustered <- dat.integrated
+  group.vec <- c("integrated_snn_res.0.3","integrated_snn_res.0.5","integrated_snn_res.0.7","integrated_snn_res.1")
+}
+
+DimPlot(dat.clustered,reduction="umap",group.by=colnames(metadata)[1])
+DimPlot(dat.clustered,reduction="umap",group.by=colnames(metadata)[2])
+DimPlot(dat.clustered,reduction="umap",group.by=group.vec[1])
+DimPlot(dat.clustered,reduction="umap",group.by=group.vec[2])
+DimPlot(dat.clustered,reduction="umap",group.by=group.vec[3])
+DimPlot(dat.clustered,reduction="umap",group.by=group.vec[4])
+
+```

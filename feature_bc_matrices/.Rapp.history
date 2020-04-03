@@ -1,0 +1,47 @@
+setwd("~/Documents/Vignali Lab/October 2019/seqwell2_v_10x_analysis.19.10.16/")#
+packrat::init()#
+library(Seurat)#
+setwd("~/Desktop/auto_workflow_scrnaseq.20.02.04")#
+setwd("feature_bc_matrices")#
+files.to.read <- list.files()#
+#
+raw.dat <- Read10X(files.to.read)
+num.samples <- 2#
+dim.raw.dat <- dim(raw.dat)#
+#
+metadata <- data.frame(samples=files.to.read,chemistry=c("3prime","5prime"))#
+#
+source('~/Desktop/standard_scRNAseq_analysis_scripts.20.02.04/01_metadata_constructor.20.02.04.R', chdir = TRUE)#
+#
+overall.meta <- metadata.constructor(raw.data=raw.dat,metadata=metadata)#
+#
+dat <- CreateSeuratObject(counts=raw.dat[[1]],meta.data=overall.meta)#
+dat[["CITEseq"]] <- CreateAssayObject(counts=raw.dat[[2]])
+head(overall.meta)
+levels(overall.meta$samples)
+sub <- raw.data[[1]][,rownames(overall.metadata$samples==levels(samples)[i])]
+sub <- raw.dat[[1]][,rownames(overall.metadata$samples==levels(samples)[i])]
+sub <- raw.dat[[1]][,rownames(overall.meta$samples==levels(samples)[i])]
+sub <- raw.dat[[1]][,rownames(overall.meta$samples==levels(overall.meta$samples)[i])]
+i <- 1
+sub <- raw.dat[[1]][,rownames(overall.meta$samples==levels(overall.meta$samples)[i])]
+sub <- raw.dat[[1]][,rownames(overall.meta$samples)[levels(overall.meta$samples)[i])]
+sub <- raw.dat[[1]][,rownames(overall.meta$samples)[levels(overall.meta$samples)[i]]
+)
+sub <- raw.dat[[1]][,rownames(overall.meta$samples)[levels(overall.meta$samples)[i]]]
+[,which(overall.meta$samples==levels(overall.meta$samples)[i]]
+sub <- raw.dat[[1]][,which(overall.meta$samples==levels(overall.meta$samples)[i]]
+sub <- raw.dat[[1]][,which(overall.meta$samples==levels(overall.meta$samples)[i])]
+dim(sub)
+pseudobulk <- matrix(data=NA,nrow=nrow(raw.dat[[1]]),ncol=2)
+pseudobulk[,i] <- apply(sub,1,function(x) sum(x))
+head(pseudobulk)
+colnames(pseudobulk) <- levels(overall.meta$samples)
+rownames(pseudobulk) <- rownames(raw.dat[[1]])
+head(pseudobulk)
+i <- 2
+sub <- raw.dat[[1]][,which(overall.meta$samples==levels(overall.meta$samples)[i])]#
+	pseudobulk[,i] <- apply(sub,1,function(x) sum(x))
+head(pseudobulk)
+commandArgs()
+?commandArgs()

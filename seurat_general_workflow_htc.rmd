@@ -48,7 +48,7 @@ source('01_metadata_constructor.R')
 
 overall.meta <- metadata.constructor(raw.data=raw.dat,metadata=metadata)
 
-dat <- CreateSeuratObject(counts=raw.dat[[1]],meta.data=overall.meta)
+dat <- CreateSeuratObject(counts=raw.dat,meta.data=overall.meta)
 
 ```
 

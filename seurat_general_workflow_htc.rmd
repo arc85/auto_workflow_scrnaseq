@@ -32,7 +32,6 @@ read_chunk('03_analysis_with_integration.R')
 }
 
 read_chunk('04_citeseq_classification.R')
-
 ```
 
 # Read data into Seurat and Create Metadata

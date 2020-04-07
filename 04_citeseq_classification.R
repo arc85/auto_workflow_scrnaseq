@@ -163,4 +163,9 @@ dat1 <- dat.split[[1]]
 dat.other <- dat.split[2:length(dat.split)]
 dat <- merge(dat1,dat.other)
 
+kable(table(dat@meta.data$unhashed.samples)) %>%
+  kable_styling("striped",full_width=TRUE)
+
+#Remove unhashed cells that are NA
+
 } #ends toplevel else

@@ -1,5 +1,11 @@
 
-## @knitr cell_unhashing 
+## @knitr cell_unhashing
+
+if (unhashing=="NO") {
+
+	print("No cell hashing present")
+
+} else {
 
 cell_unhash <- read.csv("cell_unhashing_identities.csv")
 
@@ -31,35 +37,35 @@ for (a in 1:length(samples)) {
 		cutpoints[[i]] <- mean(kmeans.res[[i]]$center)
 
 	}
-	
+
 	cite.log.trans <- data.frame(t(data.frame(cite.log)))
 	combs.for.plot <- combn(nrow(cell_unhash_sub),2)
 
 	plot_list <- vector("list",length=ncol(combs.for.plot))
 
 	for (i in 1:length(plot_list)) {
-	
+
 		plot.index1 <- combs.for.plot[1,i]
 		plot.index2 <- combs.for.plot[2,i]
-	
+
 		plot_list[[i]] <-ggplot(cite.log.trans,aes_string(colnames(cite.log.trans)[plot.index1],colnames(cite.log.trans)[plot.index2])) +
 		geom_point(size=0.1) +
-		geom_hline(yintercept=cutpoints[[plot.index2]]) + 
+		geom_hline(yintercept=cutpoints[[plot.index2]]) +
 		geom_vline(xintercept=cutpoints[[plot.index1]])
-	
+
 	}
-	
+
 	plot_results[[a]][[1]] <- plot_list
-	
+
 	citeseq_res <- matrix(data=0,nrow=nrow(cite.log),ncol=ncol(cite.log))
 
 	for (i in 1:nrow(cite.log)) {
-	
+
 		index <- cite.log[i,]>cutpoints[[i]]
 		citeseq_res[i,index] <- 1
-	
+
 	}
-	
+
 	citeseq_sums <- colSums(citeseq_res)
 	doublet.index <- citeseq_sums>1
 	citeseq_res[,doublet.index] <- 0
@@ -67,34 +73,36 @@ for (a in 1:length(samples)) {
 	citeseq_use <- colSums(citeseq_res)
 	use.index <- citeseq_use>0
 	cite.log.use <- cite.log[,use.index]
-	
+
 	cite.log.trans <- data.frame(t(data.frame(cite.log.use)))
 
 	plot_list <- vector("list",length=ncol(combs.for.plot))
 
 	for (i in 1:length(plot_list)) {
-	
+
 		plot.index1 <- combs.for.plot[1,i]
 		plot.index2 <- combs.for.plot[2,i]
-	
+
 		plot_list[[i]] <- ggplot(cite.log.trans,aes_string(colnames(cite.log.trans)[plot.index1],colnames(cite.log.trans)[plot.index2])) +
 		geom_point(size=0.1) +
-		geom_hline(yintercept=cutpoints[[plot.index2]]) + 
+		geom_hline(yintercept=cutpoints[[plot.index2]]) +
 		geom_vline(xintercept=cutpoints[[plot.index1]])
-	
+
 	}
-	
+
 	plot_results[[a]][[2]] <- plot_list
 
 	sample.ident <- apply(citeseq_res,2,function(x) if (any(x>0)) {
 	which(x>0) } else {
 		0
 	})
-	
+
 	level_key <- as.character(paste(samples[a],cell_unhash_sub$individual_sample,sep="_"))
 	names(level_key) <- seq_along(1:nrow(cell_unhash_sub))
 	sample.ident <- as.factor(recode(sample.ident,!!!level_key,.default="NA"))
-	
+
 	unhash_results[[a]] <- sample.ident
-	
+
+}
+
 }

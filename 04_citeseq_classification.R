@@ -105,4 +105,10 @@ for (a in 1:length(samples)) {
 
 }
 
+for (i in 1:length(plot_results)) {
+	for (a in 1:length(plot_results[[i]])) {
+		print(wrap_plots(plot_results[[i]][[a]]))
+	}
+}
+
 }

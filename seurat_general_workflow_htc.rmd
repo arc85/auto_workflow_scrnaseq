@@ -10,10 +10,18 @@ output: html_document
 ```{r}
 cli <- commandArgs(trailingOnly=T)
 args <- strsplit(cli,"=",fixed=T)
+
 arg.val <- as.factor(args[[1]][2])
 arg.name <- args[[1]][1]
 assign(arg.name,arg.val)
+
 metadata.file <- as.character(args[[2]][2])
+
+arg.val <- as.factor(args[[3]][2])
+arg.name <- args[[3]][1]
+assign(arg.name,arg.val)
+
+cell.unhashing.file <- as.character(args[[4]][2])
 ```
 
 ```{r echo=FALSE}
@@ -22,6 +30,9 @@ read_chunk('02_analysis_no_integration.R')
 } else {
 read_chunk('03_analysis_with_integration.R')
 }
+
+read_chunk('04_citeseq_classification.R')
+
 ```
 
 # Read data into Seurat and Create Metadata
@@ -30,6 +41,10 @@ read_chunk('03_analysis_with_integration.R')
 
 #Load Seurat v3
 library(Seurat)
+library(Matrix)
+library(tidyverse)
+library(ggplot2)
+library(patchwork)
 
 #Set seed for reproducibility
 set.seed(02221989)
@@ -51,6 +66,15 @@ overall.meta <- metadata.constructor(raw.data=raw.dat,metadata=metadata)
 dat <- CreateSeuratObject(counts=raw.dat,meta.data=overall.meta)
 
 ```
+
+# Identify samples using cell hashing, if present
+
+```{r,fig.width=7,fig.asp=0.618,out.width="70%",fig.align="center",linewidth=60}
+
+<<cell_unhashing>>
+
+```
+
 
 # Overall Workflow
 

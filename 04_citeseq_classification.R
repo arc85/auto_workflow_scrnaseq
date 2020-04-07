@@ -168,4 +168,8 @@ kable(table(dat@meta.data$unhashed.samples)) %>%
 
 #Remove unhashed cells that are NA
 
+cells.remove <- dat@meta.data$unhashed.samples=="NA"
+
+dat <- dat[,!cells.remove]
+
 } #ends toplevel else

@@ -1,13 +1,6 @@
 
 ## @knitr cell_unhashing
 
-#Condition for no cell unhashing
-if (unhashing=="NO") {
-
-	print("No cell hashing present")
-
-} else {
-
 #Condition for cell unhashing
 
 #Read in data and set up unhashing lists
@@ -171,5 +164,3 @@ kable(table(dat@meta.data$unhashed.samples)) %>%
 cells.remove <- dat@meta.data$unhashed.samples=="NA"
 
 dat <- dat[,!cells.remove]
-
-} #ends toplevel else

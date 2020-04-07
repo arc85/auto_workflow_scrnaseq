@@ -135,8 +135,32 @@ for (i in 1:length(plot_results)) {
 dat.split <- SplitObject(dat,split.by="sample")
 
 for (i in 1:length(dat.split)) {
-	dat.in.unhash <- colnames(dat.split[[i]]) %in% colnames()
-	unhash_results[[i]] <- colnames()
+	if (i==1) {
+
+	dat.in.unhash <- colnames(dat.split[[i]])[colnames(dat.split[[i]]) %in% names(unhash_results[[i]])]
+	unhash.in.dat <- names(unhash_results[[i]])[names(unhash_results[[i]]) %in% colnames(dat.split[[i]])]
+	cells.to.use <- intersect(dat.in.unhash,unhash.in.dat)
+	dat.split[[i]] <- dat.split[[i]][,cells.to.use]
+	unhash_results[[i]] <- unhash_results[[i]][cells.to.use]
+	dat.split[[i]]$unhashed.samples <- unhash_results[[i]]
+
+	} else {
+
+		names(unhash_results[[i]]) <- paste(i,names(unhash_results[[i]]),sep="_")
+		dat.in.unhash <- colnames(dat.split[[i]])[colnames(dat.split[[i]]) %in% names(unhash_results[[i]])]
+		unhash.in.dat <- names(unhash_results[[i]])[names(unhash_results[[i]]) %in% colnames(dat.split[[i]])]
+		cells.to.use <- intersect(dat.in.unhash,unhash.in.dat)
+		dat.split[[i]] <- dat.split[[i]][,cells.to.use]
+		unhash_results[[i]] <- unhash_results[[i]][cells.to.use]
+		dat.split[[i]]$unhashed.samples <- unhash_results[[i]]
+
+	}
 }
 
-}
+#Recombine Seurat objects
+
+dat1 <- dat.split[[1]]
+dat.other <- dat.split[2:length(dat.split)]
+dat <- merge(dat1,dat.other)
+
+} #ends toplevel else

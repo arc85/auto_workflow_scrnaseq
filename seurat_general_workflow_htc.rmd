@@ -10,10 +10,18 @@ output: html_document
 ```{r}
 cli <- commandArgs(trailingOnly=T)
 args <- strsplit(cli,"=",fixed=T)
+
 arg.val <- as.factor(args[[1]][2])
 arg.name <- args[[1]][1]
 assign(arg.name,arg.val)
+
 metadata.file <- as.character(args[[2]][2])
+
+arg.val <- as.factor(args[[3]][2])
+arg.name <- args[[3]][1]
+assign(arg.name,arg.val)
+
+cell.unhashing.file <- as.character(args[[4]][2])
 ```
 
 ```{r echo=FALSE}
@@ -21,6 +29,12 @@ if (integration=="NO") {
 read_chunk('02_analysis_no_integration.R')
 } else {
 read_chunk('03_analysis_with_integration.R')
+}
+
+if (unhashing=="NO") {
+read_chunk('04_no_citeseq_classification.R')
+} else {
+read_chunk('05_citeseq_classification.R')
 }
 ```
 
@@ -30,6 +44,11 @@ read_chunk('03_analysis_with_integration.R')
 
 #Load Seurat v3
 library(Seurat)
+library(Matrix)
+library(tidyverse)
+library(ggplot2)
+library(patchwork)
+library(kableExtra)
 
 #Set seed for reproducibility
 set.seed(02221989)
@@ -52,6 +71,15 @@ dat <- CreateSeuratObject(counts=raw.dat,meta.data=overall.meta)
 
 ```
 
+# Identify samples using cell hashing, if present
+
+```{r,fig.width=7,fig.asp=0.618,out.width="70%",fig.align="center",linewidth=60}
+
+<<cell_unhashing>>
+
+```
+
+
 # Overall Workflow
 
 ```{r,fig.width=7,fig.asp=0.618,out.width="70%",fig.align="center",linewidth=60}
@@ -67,16 +95,15 @@ dat <- CreateSeuratObject(counts=raw.dat,meta.data=overall.meta)
 
 if (integration=="NO") {
   dat.clustered <- dat
-  group.vec <- c("RNA_snn_res.0.3","RNA_snn_res.0.5","RNA_snn_res.0.7","RNA_snn_res.1")
 } else {
   dat.clustered <- dat.integrated
-  group.vec <- c("integrated_snn_res.0.3","integrated_snn_res.0.5","integrated_snn_res.0.7","integrated_snn_res.1")
 }
 
-DimPlot(dat.clustered,reduction="umap",group.by=colnames(metadata)[1])
-DimPlot(dat.clustered,reduction="umap",group.by=group.vec[1])
-DimPlot(dat.clustered,reduction="umap",group.by=group.vec[2])
-DimPlot(dat.clustered,reduction="umap",group.by=group.vec[3])
-DimPlot(dat.clustered,reduction="umap",group.by=group.vec[4])
+for (i in 4:ncol(dat@meta.data)) {
+    print(
+      DimPlot(dat.clustered,reduction="umap",group.by=colnames(dat@meta.data)[i])
+    )
+  }
+
 
 ```

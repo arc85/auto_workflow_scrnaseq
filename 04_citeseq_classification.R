@@ -114,6 +114,7 @@ for (a in 1:length(samples)) {
 	level_key <- as.character(paste(samples[a],cell_unhash_sub$individual_sample,sep="_"))
 	names(level_key) <- seq_along(1:nrow(cell_unhash_sub))
 	sample.ident <- as.factor(recode(sample.ident,!!!level_key,.default="NA"))
+	names(sample.ident) <- colnames(cite.log)
 
 	unhash_results[[a]] <- sample.ident
 

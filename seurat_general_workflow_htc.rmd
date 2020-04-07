@@ -97,10 +97,15 @@ if (integration=="NO") {
   group.vec <- c("integrated_snn_res.0.3","integrated_snn_res.0.5","integrated_snn_res.0.7","integrated_snn_res.1")
 }
 
-DimPlot(dat.clustered,reduction="umap",group.by=colnames(metadata)[1])
-DimPlot(dat.clustered,reduction="umap",group.by=group.vec[1])
-DimPlot(dat.clustered,reduction="umap",group.by=group.vec[2])
-DimPlot(dat.clustered,reduction="umap",group.by=group.vec[3])
-DimPlot(dat.clustered,reduction="umap",group.by=group.vec[4])
+for (i in 4:ncol(dat@meta.data)) {
+  print(
+    DimPlot(dat.clustered,reduction="umap",group.by=colnames(metadata)[i])
+  )
+}
+  DimPlot(dat.clustered,reduction="umap",group.by=group.vec[1])
+  DimPlot(dat.clustered,reduction="umap",group.by=group.vec[2])
+  DimPlot(dat.clustered,reduction="umap",group.by=group.vec[3])
+  DimPlot(dat.clustered,reduction="umap",group.by=group.vec[4])
+
 
 ```

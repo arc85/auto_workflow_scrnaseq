@@ -11,7 +11,7 @@ if (unhashing=="NO") {
 #Condition for cell unhashing
 
 #Read in data and set up unhashing lists
-cell_unhash <- read.csv("cell_unhashing_identities.csv")
+cell_unhash <- read.csv(cell.unhashing.file)
 
 samples <- levels(as.factor(cell_unhash$sample))
 samples_dir <- paste(samples,"_Cell_Hash",sep="")

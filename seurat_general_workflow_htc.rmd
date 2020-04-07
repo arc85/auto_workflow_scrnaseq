@@ -45,6 +45,7 @@ library(Matrix)
 library(tidyverse)
 library(ggplot2)
 library(patchwork)
+library(kableExtra)
 
 #Set seed for reproducibility
 set.seed(02221989)

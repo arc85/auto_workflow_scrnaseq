@@ -1,12 +1,16 @@
 
 ## @knitr cell_unhashing
 
+#Condition for no cell unhashing
 if (unhashing=="NO") {
 
 	print("No cell hashing present")
 
 } else {
 
+#Condition for cell unhashing
+
+#Read in data and set up unhashing lists
 cell_unhash <- read.csv("cell_unhashing_identities.csv")
 
 samples <- levels(as.factor(cell_unhash$sample))
@@ -20,6 +24,8 @@ for (i in 1:length(plot_results)) {
 }
 
 names(plot_results) <- names(unhash_results) <- samples
+
+#For each sample, read in cells and identify cutpoints for each hash
 
 for (a in 1:length(samples)) {
 
@@ -37,6 +43,8 @@ for (a in 1:length(samples)) {
 		cutpoints[[i]] <- mean(kmeans.res[[i]]$center)
 
 	}
+
+	#Plot to cutpoints
 
 	cite.log.trans <- data.frame(t(data.frame(cite.log)))
 	combs.for.plot <- combn(nrow(cell_unhash_sub),2)
@@ -57,6 +65,8 @@ for (a in 1:length(samples)) {
 
 	plot_results[[a]][[1]] <- plot_list
 
+	#Identify and remove doublets
+
 	citeseq_res <- matrix(data=0,nrow=nrow(cite.log),ncol=ncol(cite.log))
 
 	for (i in 1:nrow(cite.log)) {
@@ -73,6 +83,8 @@ for (a in 1:length(samples)) {
 	citeseq_use <- colSums(citeseq_res)
 	use.index <- citeseq_use>0
 	cite.log.use <- cite.log[,use.index]
+
+	#Plot hashes and cutpoints without doublets
 
 	cite.log.trans <- data.frame(t(data.frame(cite.log.use)))
 
@@ -92,6 +104,8 @@ for (a in 1:length(samples)) {
 
 	plot_results[[a]][[2]] <- plot_list
 
+	#Identify cell unhashed sample
+
 	sample.ident <- apply(citeseq_res,2,function(x) if (any(x>0)) {
 	which(x>0) } else {
 		0
@@ -105,10 +119,23 @@ for (a in 1:length(samples)) {
 
 }
 
+#Plot cutpoint results from unhashing
+
 for (i in 1:length(plot_results)) {
 	for (a in 1:length(plot_results[[i]])) {
-		print(wrap_plots(plot_results[[i]][[a]]))
+		print(
+			wrap_plots(plot_results[[i]][[a]]) +
+				plot_annotation(title=paste(names(plot_results)[i],if_else(a==1," with doublets"," final ids"),sep=""))
+		)
 	}
+}
+
+#Incorporate unhashing into metadata for each sample
+dat.split <- SplitObject(dat,split.by="sample")
+
+for (i in 1:length(dat.split)) {
+	dat.in.unhash <- colnames(dat.split[[i]]) %in% colnames()
+	unhash_results[[i]] <- colnames()
 }
 
 }

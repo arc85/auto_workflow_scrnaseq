@@ -63,7 +63,7 @@ for (i in 1:length(files.to.read)) {
     raw.dat.list[[i]] <- Read10X(paste(getwd(),"feature_bc_matrices",files.to.read[i],sep="/"))
 
     if (!i==1) {
-      colnames(raw.dat.list[[i]]) <- paste(i,"_",colnames(raw.dat.list[[i]]))
+      colnames(raw.dat.list[[i]]) <- paste(i,"_",colnames(raw.dat.list[[i]]),sep="")
     }
 
 }
@@ -76,13 +76,13 @@ raw.dat <- do.call(cbind,raw.dat.list)
 rm(raw.dat.list)
 gc()
 
-metadata <- read.csv(metadata.file,sep="\t")
+#Create metadata
+source('01_metadata_constructor.R')
+
+metadata <- read.csv(metadata.file,sep=",")
 
 num.samples <- nrow(metadata)
 dim.raw.dat <- dim(raw.dat)
-
-#Create metadata
-source('01_metadata_constructor.R')
 
 overall.meta <- metadata.constructor(raw.data=raw.dat,metadata=metadata)
 

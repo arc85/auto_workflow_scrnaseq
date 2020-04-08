@@ -12,6 +12,13 @@ metadata.constructor <- function(raw.data,metadata) {
 
 	}
 
+	#organize metadata path to match order samples were read
+
+	sample.order <- match(files.to.read,metadata$sample)
+	metadata <- metadata[sample.order,]
+
+	#start workflow for creating metadata
+
 	num.cells.sample <- vector("logical",length=num.samples)
 
 	for (i in 1:num.samples) {
@@ -37,11 +44,12 @@ metadata.constructor <- function(raw.data,metadata) {
 
 				data.to.add <- as.character(metadata[z,i])
 				meta.frame[1:num.cells.sample[z],i] <- data.to.add
+				end.count <- num.cells.sample[z]
 
 			} else {
 
-				start.count <- num.cells.sample[z-1]+1
-				end.count <- cumsum(num.cells.sample[1:z])[z]
+				start.count <- end.count+1
+				end.count <- sum(end.count,num.cells.sample[z])
 
 				data.to.add <- as.character(metadata[z,i])
 

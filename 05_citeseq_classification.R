@@ -169,6 +169,14 @@ sapply(unhash_results,function(x) table(x=="NA"))
 
 #Recombine Seurat objects
 
-dat1 <- dat.split[[1]]
-dat.other <- dat.split[2:length(dat.split)]
-dat <- merge(dat1,dat.other)
+if (length(dat.split)==1) {
+
+	dat <- dat.unhash
+
+} else {
+
+	dat1 <- dat.split[[1]]
+	dat.other <- dat.split[2:length(dat.split)]
+	dat <- merge(dat1,dat.other)
+
+}

@@ -2,6 +2,6 @@
 ##TC March 6 2020
 
 R --vanilla -f auto_workflow_script.R --args integration=NO \
-  metadata=./ancillary_files/metadata_file.txt \
+  metadata=./ancillary_files/metadata_file.csv \
   unhashing=YES \
   unhashing_file=./ancillary_files/cell_unhashing_identities.csv

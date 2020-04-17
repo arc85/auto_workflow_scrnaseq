@@ -24,8 +24,8 @@ for (a in 1:length(samples)) {
 
 	cell_unhash_sub <- cell_unhash %>% filter(sample==samples[a])
 
-	citeseq <- Read10X(paste("./citeseq_matrices/",samples_dir[a],"/read_count/",sep=""),gene.column=1)
-	citeseq <- citeseq[!rownames(citeseq)=="unmapped",]
+	citeseq <- Read10X(paste("./citeseq_matrices/",samples_dir[a],"/umi_count/",sep=""),gene.column=1)
+	citeseq <- citeseq[rownames(citeseq) %in% cell_unhash_sub$cell_hash,]
 
 	cite.log <- log1p(citeseq)
 	kmeans.res <- cutpoints <- vector("list",length=nrow(cell_unhash_sub))
@@ -127,40 +127,56 @@ for (i in 1:length(plot_results)) {
 #Incorporate unhashing into metadata for each sample
 dat.split <- SplitObject(dat,split.by="sample")
 
-for (i in 1:length(dat.split)) {
-	if (i==1) {
+samples.to.unhash <- names(dat.split)[names(dat.split) %in% names(unhash_results)]
 
-	dat.in.unhash <- colnames(dat.split[[i]])[colnames(dat.split[[i]]) %in% names(unhash_results[[i]])]
-	unhash.in.dat <- names(unhash_results[[i]])[names(unhash_results[[i]]) %in% colnames(dat.split[[i]])]
-	cells.to.use <- intersect(dat.in.unhash,unhash.in.dat)
-	dat.split[[i]] <- dat.split[[i]][,cells.to.use]
-	unhash_results[[i]] <- unhash_results[[i]][cells.to.use]
-	dat.split[[i]]$unhashed.samples <- unhash_results[[i]]
+for (i in 1:length(samples.to.unhash)) {
+
+	unhash.index <- match(samples.to.unhash[i],names(dat.split))
+	dat.unhash <- dat.split[[unhash.index]]
+	colname.sample <- colnames(dat.unhash)[1]
+
+	if (grepl("^[A-z]",colname.sample)) {
+
+		dat.in.unhash <- colnames(dat.unhash)[colnames(dat.unhash) %in% names(unhash_results[[i]])]
+		unhash.in.dat <- names(unhash_results[[i]])[names(unhash_results[[i]]) %in% colnames(dat.unhash)]
+		cells.to.use <- intersect(dat.in.unhash,unhash.in.dat)
+		dat.unhash <- dat.unhash[,cells.to.use]
+		unhash_results[[i]] <- unhash_results[[i]][cells.to.use]
+		dat.unhash$unhashed.samples <- unhash_results[[i]]
 
 	} else {
 
-		names(unhash_results[[i]]) <- paste(i,names(unhash_results[[i]]),sep="_")
-		dat.in.unhash <- colnames(dat.split[[i]])[colnames(dat.split[[i]]) %in% names(unhash_results[[i]])]
-		unhash.in.dat <- names(unhash_results[[i]])[names(unhash_results[[i]]) %in% colnames(dat.split[[i]])]
+		name.prefix <- strsplit(colname.sample,split="_")[[1]][1]
+		names(unhash_results[[i]]) <- paste(name.prefix,names(unhash_results[[i]]),sep="_")
+		dat.in.unhash <- colnames(dat.unhash)[colnames(dat.unhash) %in% names(unhash_results[[i]])]
+		unhash.in.dat <- names(unhash_results[[i]])[names(unhash_results[[i]]) %in% colnames(dat.unhash)]
 		cells.to.use <- intersect(dat.in.unhash,unhash.in.dat)
-		dat.split[[i]] <- dat.split[[i]][,cells.to.use]
+		dat.unhash <- dat.unhash[,cells.to.use]
 		unhash_results[[i]] <- unhash_results[[i]][cells.to.use]
-		dat.split[[i]]$unhashed.samples <- unhash_results[[i]]
+		dat.unhash$unhashed.samples <- unhash_results[[i]]
 
 	}
+
+	cells.remove <- dat.unhash@meta.data$unhashed.samples=="NA"
+	dat.unhash <- dat.unhash[,!cells.remove]
+	dat.split[[unhash.index]] <- dat.unhash
+
 }
+
+#Show number of NA cells from cell unhashing
+
+sapply(unhash_results,function(x) table(x=="NA"))
 
 #Recombine Seurat objects
 
-dat1 <- dat.split[[1]]
-dat.other <- dat.split[2:length(dat.split)]
-dat <- merge(dat1,dat.other)
+if (length(dat.split)==1) {
 
-kable(table(dat@meta.data$unhashed.samples)) %>%
-  kable_styling("striped",full_width=TRUE)
+	dat <- dat.unhash
 
-#Remove unhashed cells that are NA
+} else {
 
-cells.remove <- dat@meta.data$unhashed.samples=="NA"
+	dat1 <- dat.split[[1]]
+	dat.other <- dat.split[2:length(dat.split)]
+	dat <- merge(dat1,dat.other)
 
-dat <- dat[,!cells.remove]
+}

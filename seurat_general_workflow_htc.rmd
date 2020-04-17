@@ -26,6 +26,10 @@ arg.name <- args[[4]][1]
 assign(arg.name,arg.val)
 
 cell.unhashing.file <- as.character(args[[5]][2])
+
+arg.val <- as.character(args[[6]][2])
+arg.name <- args[[6]][1]
+assign(arg.name,arg.val)
 ```
 
 ```{r echo=FALSE}

@@ -1,177 +1,105 @@
 
 ## @knitr tcr_bcr_addition
 
-#Condition for cell unhashing
+#Read in TCR and BCR for each sample
 
-#Read in data and set up unhashing lists
-cell_unhash <- read.csv(cell.unhashing.file)
+tcr.bcr.files <- list.files("./tcr_bcr_files",recursive=T)
 
-samples <- levels(as.factor(cell_unhash$sample))
-samples_dir <- paste(samples,"_Cell_Hash",sep="")
+samples <- unique(sapply(strsplit(tcr.bcr.files,split="/"),function(x) x[1]))
 
-plot_results <- unhash_results <- vector("list",length=length(samples))
+tcr.files <- vector("list",length=length(samples))
+names(tcr.files) <- samples
 
-for (i in 1:length(plot_results)) {
-	plot_results[[i]] <- vector("list",length=2)
-	names(plot_results[[i]]) <- c("pre_doublet_removal","post_doublet_removal")
+if (any(grepl("BCR",tcr.bcr.files))) {
+	bcr.files <- vector("list",length=length(samples))
+	names(bcr.files) <- samples
 }
 
-names(plot_results) <- names(unhash_results) <- samples
+for (i in 1:length(tcr.files)) {
+	tcr.to.read <- grep("TCR",tcr.bcr.files)[i]
+	tcr.files[[i]] <- read.csv(paste("./tcr_bcr_files/",tcr.bcr.files[tcr.to.read],sep=""))
+	tcr.files[[i]] <- tcr.files[[i]] %>% filter(is_cell=="True",full_length=="True",productive=="True",chain=="TRB") %>% mutate(cell.barcode=sapply(strsplit(as.character(barcode),split="-",),function(x) x[1]))
+}
 
-#For each sample, read in cells and identify cutpoints for each hash
+if (any(grepl("BCR",tcr.bcr.files))) {
 
-for (a in 1:length(samples)) {
-
-	cell_unhash_sub <- cell_unhash %>% filter(sample==samples[a])
-
-	citeseq <- Read10X(paste("./citeseq_matrices/",samples_dir[a],"/umi_count/",sep=""),gene.column=1)
-	citeseq <- citeseq[rownames(citeseq) %in% cell_unhash_sub$cell_hash,]
-
-	cite.log <- log1p(citeseq)
-	kmeans.res <- cutpoints <- vector("list",length=nrow(cell_unhash_sub))
-
-	for (i in 1:nrow(cell_unhash_sub)) {
-
-		kmeans.res[[i]] <- kmeans(cite.log[i,],centers=2)
-		cutpoints[[i]] <- mean(kmeans.res[[i]]$center)
-
-	}
-
-	#Plot to cutpoints
-
-	cite.log.trans <- data.frame(t(data.frame(cite.log)))
-	combs.for.plot <- combn(nrow(cell_unhash_sub),2)
-
-	plot_list <- vector("list",length=ncol(combs.for.plot))
-
-	for (i in 1:length(plot_list)) {
-
-		plot.index1 <- combs.for.plot[1,i]
-		plot.index2 <- combs.for.plot[2,i]
-
-		plot_list[[i]] <-ggplot(cite.log.trans,aes_string(colnames(cite.log.trans)[plot.index1],colnames(cite.log.trans)[plot.index2])) +
-		geom_point(size=0.1) +
-		geom_hline(yintercept=cutpoints[[plot.index2]]) +
-		geom_vline(xintercept=cutpoints[[plot.index1]])
-
-	}
-
-	plot_results[[a]][[1]] <- plot_list
-
-	#Identify and remove doublets
-
-	citeseq_res <- matrix(data=0,nrow=nrow(cite.log),ncol=ncol(cite.log))
-
-	for (i in 1:nrow(cite.log)) {
-
-		index <- cite.log[i,]>cutpoints[[i]]
-		citeseq_res[i,index] <- 1
-
-	}
-
-	citeseq_sums <- colSums(citeseq_res)
-	doublet.index <- citeseq_sums>1
-	citeseq_res[,doublet.index] <- 0
-
-	citeseq_use <- colSums(citeseq_res)
-	use.index <- citeseq_use>0
-	cite.log.use <- cite.log[,use.index]
-
-	#Plot hashes and cutpoints without doublets
-
-	cite.log.trans <- data.frame(t(data.frame(cite.log.use)))
-
-	plot_list <- vector("list",length=ncol(combs.for.plot))
-
-	for (i in 1:length(plot_list)) {
-
-		plot.index1 <- combs.for.plot[1,i]
-		plot.index2 <- combs.for.plot[2,i]
-
-		plot_list[[i]] <- ggplot(cite.log.trans,aes_string(colnames(cite.log.trans)[plot.index1],colnames(cite.log.trans)[plot.index2])) +
-		geom_point(size=0.1) +
-		geom_hline(yintercept=cutpoints[[plot.index2]]) +
-		geom_vline(xintercept=cutpoints[[plot.index1]])
-
-	}
-
-	plot_results[[a]][[2]] <- plot_list
-
-	#Identify cell unhashed sample
-
-	sample.ident <- apply(citeseq_res,2,function(x) if (any(x>0)) {
-	which(x>0) } else {
-		0
-	})
-
-	level_key <- as.character(paste(samples[a],cell_unhash_sub$individual_sample,sep="_"))
-	names(level_key) <- seq_along(1:nrow(cell_unhash_sub))
-	sample.ident <- as.factor(recode(sample.ident,!!!level_key,.default="NA"))
-	names(sample.ident) <- colnames(cite.log)
-
-	unhash_results[[a]] <- sample.ident
+for (i in 1:length(bcr.files)) {
+	bcr.to.read <- grep("BCR",tcr.bcr.files)[i]
+	bcr.files[[i]] <- read.csv(paste("./tcr_bcr_files/",tcr.bcr.files[bcr.to.read],sep=""))
+	bcr.files[[i]] <- bcr.files[[i]] %>% filter(is_cell=="True",full_length=="True",productive=="True",chain=="IGH") %>% mutate(cell.barcode=sapply(strsplit(as.character(barcode),split="-",),function(x) x[1]))
+}
 
 }
 
-#Plot cutpoint results from unhashing
 
-for (i in 1:length(plot_results)) {
-	for (a in 1:length(plot_results[[i]])) {
-		print(
-			wrap_plots(plot_results[[i]][[a]]) +
-				plot_annotation(title=paste(names(plot_results)[i],if_else(a==1," with doublets"," final ids"),sep=""))
-		)
-	}
-}
+#Split data to add per sample TCR and BCR data - remove duplicated barcodes for now
 
-#Incorporate unhashing into metadata for each sample
 dat.split <- SplitObject(dat,split.by="sample")
 
-samples.to.unhash <- names(dat.split)[names(dat.split) %in% names(unhash_results)]
+#Add TCR data
 
-for (i in 1:length(samples.to.unhash)) {
+for (i in 1:length(samples)) {
 
-	unhash.index <- match(samples.to.unhash[i],names(dat.split))
-	dat.unhash <- dat.split[[unhash.index]]
-	colname.sample <- colnames(dat.unhash)[1]
+	if (i==1) {
 
-	if (grepl("^[A-z]",colname.sample)) {
-
-		dat.in.unhash <- colnames(dat.unhash)[colnames(dat.unhash) %in% names(unhash_results[[i]])]
-		unhash.in.dat <- names(unhash_results[[i]])[names(unhash_results[[i]]) %in% colnames(dat.unhash)]
-		cells.to.use <- intersect(dat.in.unhash,unhash.in.dat)
-		dat.unhash <- dat.unhash[,cells.to.use]
-		unhash_results[[i]] <- unhash_results[[i]][cells.to.use]
-		dat.unhash$unhashed.samples <- unhash_results[[i]]
+		sample.cell.names <- colnames(dat.split[[i]])
+		tcr.metadata <- data.frame(cell.barcode=sample.cell.names)
+		tcr.metadata <- left_join(tcr.metadata,tcr.files[[i]] %>% filter(!duplicated(cell.barcode)) %>%  select(cell.barcode,cdr3),by="cell.barcode")
+		rownames(tcr.metadata) <- tcr.metadata$cell.barcode
+		tcr.metadata <- tcr.metadata %>% select(-cell.barcode)
+		dat.split[[i]]$tcrb.cdr3 <- tcr.metadata
 
 	} else {
 
-		name.prefix <- strsplit(colname.sample,split="_")[[1]][1]
-		names(unhash_results[[i]]) <- paste(name.prefix,names(unhash_results[[i]]),sep="_")
-		dat.in.unhash <- colnames(dat.unhash)[colnames(dat.unhash) %in% names(unhash_results[[i]])]
-		unhash.in.dat <- names(unhash_results[[i]])[names(unhash_results[[i]]) %in% colnames(dat.unhash)]
-		cells.to.use <- intersect(dat.in.unhash,unhash.in.dat)
-		dat.unhash <- dat.unhash[,cells.to.use]
-		unhash_results[[i]] <- unhash_results[[i]][cells.to.use]
-		dat.unhash$unhashed.samples <- unhash_results[[i]]
+		sample.cell.names <- colnames(dat.split[[i]])
+		sample.cell.names <- sapply(strsplit(sample.cell.names,split="_"),function(x) x[2])
+		tcr.metadata <- data.frame(cell.barcode=sample.cell.names)
+		tcr.metadata <- left_join(tcr.metadata,tcr.files[[i]] %>% filter(!duplicated(cell.barcode)) %>%  select(cell.barcode,cdr3),by="cell.barcode")
+		rownames(tcr.metadata) <- paste(i,"_",tcr.metadata$cell.barcode,sep="")
+		tcr.metadata <- tcr.metadata %>% select(-cell.barcode)
+		dat.split[[i]]$tcrb.cdr3 <- tcr.metadata
 
 	}
 
-	cells.remove <- dat.unhash@meta.data$unhashed.samples=="NA"
-	dat.unhash <- dat.unhash[,!cells.remove]
-	dat.split[[unhash.index]] <- dat.unhash
+}
+
+
+##Add BCR data, if present
+
+if (any(grepl("BCR",tcr.bcr.files))) {
+
+for (i in 1:length(samples)) {
+
+	if (i==1) {
+
+		sample.cell.names <- colnames(dat.split[[i]])
+		bcr.metadata <- data.frame(cell.barcode=sample.cell.names)
+		bcr.metadata <- left_join(bcr.metadata,bcr.files[[i]] %>% filter(!duplicated(cell.barcode)) %>%  select(cell.barcode,cdr3),by="cell.barcode")
+		rownames(bcr.metadata) <- bcr.metadata$cell.barcode
+		bcr.metadata <- bcr.metadata %>% select(-cell.barcode)
+		dat.split[[i]]$bcr.igh.cdr3 <- tcr.metadata
+
+	} else {
+
+		sample.cell.names <- colnames(dat.split[[i]])
+		sample.cell.names <- sapply(strsplit(sample.cell.names,split="_"),function(x) x[2])
+		bcr.metadata <- data.frame(cell.barcode=sample.cell.names)
+		bcr.metadata <- left_join(bcr.metadata,bcr.files[[i]] %>% filter(!duplicated(cell.barcode)) %>%  select(cell.barcode,cdr3),by="cell.barcode")
+		rownames(bcr.metadata) <- bcr.metadata$cell.barcode
+		bcr.metadata <- bcr.metadata %>% select(-cell.barcode)
+		dat.split[[i]]$bcr.igh.cdr3 <- tcr.metadata
+
+	}
 
 }
 
-#Show number of NA cells from cell unhashing
+}
 
-sapply(unhash_results,function(x) table(x=="NA"))
-
-#Recombine Seurat objects
+##Recombine objects
 
 if (length(dat.split)==1) {
 
-	dat <- dat.unhash
+	dat <- dat.split
 
 } else {
 

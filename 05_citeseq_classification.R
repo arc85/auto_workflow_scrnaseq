@@ -25,7 +25,7 @@ for (a in 1:length(samples)) {
 	cell_unhash_sub <- cell_unhash %>% filter(sample==samples[a])
 
 	citeseq <- Read10X(paste("./citeseq_matrices/",samples_dir[a],"/umi_count/",sep=""),gene.column=1)
-	citeseq <- citeseq[!rownames(citeseq)=="unmapped",]
+	citeseq <- citeseq[rownames(citeseq) %in% cell_unhash_sub$cell_hash,]
 
 	cite.log <- log1p(citeseq)
 	kmeans.res <- cutpoints <- vector("list",length=nrow(cell_unhash_sub))

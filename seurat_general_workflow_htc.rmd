@@ -82,7 +82,7 @@ for (i in 1:length(files.to.read)) {
 
 }
 
-gene.names.samples <- sapply(raw.dat.list,rownames)
+gene.names.samples <- lapply(raw.dat.list,rownames)
 gene.names.use <- Reduce(intersect,gene.names.samples)
 raw.dat.list <- lapply(raw.dat.list,function(x) x[gene.names.use,])
 

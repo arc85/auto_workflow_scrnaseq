@@ -15,7 +15,9 @@ metadata.constructor <- function(raw.data,metadata) {
 	#organize metadata path to match order samples were read
 
 	sample.order <- match(files.to.read,metadata$sample)
-	metadata <- metadata[sample.order,]
+	parsed.metadata <- data.frame(metadata[sample.order,])
+	colnames(parsed.metadata) <- colnames(metadata)
+	metadata <- parsed.metadata
 
 	#start workflow for creating metadata
 

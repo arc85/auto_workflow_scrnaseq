@@ -93,12 +93,12 @@ gc()
 #Create metadata
 source('01_metadata_constructor.R')
 
-metadata <- read.csv(metadata.file,sep=",")
+sample.metadata <- read.csv(metadata.file,sep=",")
 
 num.samples <- nrow(metadata)
 dim.raw.dat <- dim(raw.dat)
 
-overall.meta <- metadata.constructor(raw.data=raw.dat,metadata=metadata)
+overall.meta <- metadata.constructor(raw.data=raw.dat,metadata=sample.metadata)
 
 dat <- CreateSeuratObject(counts=raw.dat,meta.data=overall.meta)
 

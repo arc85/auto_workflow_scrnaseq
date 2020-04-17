@@ -40,6 +40,12 @@ read_chunk('04_no_citeseq_classification.R')
 } else {
 read_chunk('05_citeseq_classification.R')
 }
+
+if (tcr_bcr_addition=="NO") {
+read_chunk('06_no_tcr_bcr_addition.R')
+} else {
+read_chunk('07_tcr_bcr_addition.R')
+}
 ```
 
 # Read data into Seurat and Create Metadata
@@ -91,6 +97,14 @@ dim.raw.dat <- dim(raw.dat)
 overall.meta <- metadata.constructor(raw.data=raw.dat,metadata=metadata)
 
 dat <- CreateSeuratObject(counts=raw.dat,meta.data=overall.meta)
+
+```
+
+# Incorporate TCR and BCR into metadata, if present
+
+```{r,fig.width=7,fig.asp=0.618,out.width="70%",fig.align="center",linewidth=60}
+
+<<tcr_bcr_addition>>
 
 ```
 

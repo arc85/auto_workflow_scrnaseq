@@ -3,20 +3,20 @@
 
 ## @knitr pcaPlot
 
-dat.list <- SplitObject(dat,split.by="chemistry")
+dat.list <- SplitObject(dat,split.by=integrate_by)
 dat.list <- lapply(dat.list,function(x) {
-	
+
 	x <- NormalizeData(x,verbose=F)
 	x <- FindVariableFeatures(x,verbose=F)
-	
+
 })
 
 features.use <- SelectIntegrationFeatures(dat.list)
 dat.list <- lapply(dat.list,function(x) {
-	
+
 	x <- ScaleData(x,features=features.use,verbose=F)
 	x <- RunPCA(x,features=features.use,verbose=F)
-	
+
 })
 
 anchors <- FindIntegrationAnchors(dat.list,reference=1,reduction="rpca",dims=1:30)

@@ -95,7 +95,7 @@ source('01_metadata_constructor.R')
 
 sample.metadata <- read.csv(metadata.file,sep=",")
 
-num.samples <- nrow(metadata)
+num.samples <- nrow(sample.metadata)
 dim.raw.dat <- dim(raw.dat)
 
 overall.meta <- metadata.constructor(raw.data=raw.dat,metadata=sample.metadata)

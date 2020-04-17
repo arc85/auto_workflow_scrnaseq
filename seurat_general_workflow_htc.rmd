@@ -15,7 +15,7 @@ arg.val <- as.factor(args[[1]][2])
 arg.name <- args[[1]][1]
 assign(arg.name,arg.val)
 
-arg.val <- as.factor(args[[2]][2])
+arg.val <- as.character(args[[2]][2])
 arg.name <- args[[2]][1]
 assign(arg.name,arg.val)
 

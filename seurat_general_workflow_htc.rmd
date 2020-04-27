@@ -15,13 +15,21 @@ arg.val <- as.factor(args[[1]][2])
 arg.name <- args[[1]][1]
 assign(arg.name,arg.val)
 
-metadata.file <- as.character(args[[2]][2])
-
-arg.val <- as.factor(args[[3]][2])
-arg.name <- args[[3]][1]
+arg.val <- as.character(args[[2]][2])
+arg.name <- args[[2]][1]
 assign(arg.name,arg.val)
 
-cell.unhashing.file <- as.character(args[[4]][2])
+metadata.file <- as.character(args[[3]][2])
+
+arg.val <- as.factor(args[[4]][2])
+arg.name <- args[[4]][1]
+assign(arg.name,arg.val)
+
+cell.unhashing.file <- as.character(args[[5]][2])
+
+arg.val <- as.character(args[[6]][2])
+arg.name <- args[[6]][1]
+assign(arg.name,arg.val)
 ```
 
 ```{r echo=FALSE}
@@ -35,6 +43,12 @@ if (unhashing=="NO") {
 read_chunk('04_no_citeseq_classification.R')
 } else {
 read_chunk('05_citeseq_classification.R')
+}
+
+if (tcr_bcr_addition=="NO") {
+read_chunk('06_no_tcr_bcr_addition.R')
+} else {
+read_chunk('07_tcr_bcr_addition.R')
 }
 ```
 
@@ -55,19 +69,46 @@ set.seed(02221989)
 
 #Read in raw data
 files.to.read <- list.files("feature_bc_matrices")
-raw.dat <- Read10X(paste(getwd(),"feature_bc_matrices",files.to.read,sep="/"))
 
-metadata <- read.csv(metadata.file,sep="\t")
+raw.dat.list <- vector("list",length=length(files.to.read))
 
-num.samples <- nrow(metadata)
-dim.raw.dat <- dim(raw.dat)
+for (i in 1:length(files.to.read)) {
+
+    raw.dat.list[[i]] <- Read10X(paste(getwd(),"feature_bc_matrices",files.to.read[i],sep="/"))
+
+    if (!i==1) {
+      colnames(raw.dat.list[[i]]) <- paste(i,"_",colnames(raw.dat.list[[i]]),sep="")
+    }
+
+}
+
+gene.names.samples <- lapply(raw.dat.list,rownames)
+gene.names.use <- Reduce(intersect,gene.names.samples)
+raw.dat.list <- lapply(raw.dat.list,function(x) x[gene.names.use,])
+
+raw.dat <- Reduce(cbind,raw.dat.list)
+rm(raw.dat.list)
+gc()
 
 #Create metadata
 source('01_metadata_constructor.R')
 
-overall.meta <- metadata.constructor(raw.data=raw.dat,metadata=metadata)
+sample.metadata <- read.csv(metadata.file,sep=",")
+
+num.samples <- nrow(sample.metadata)
+dim.raw.dat <- dim(raw.dat)
+
+overall.meta <- metadata.constructor(raw.data=raw.dat,metadata=sample.metadata)
 
 dat <- CreateSeuratObject(counts=raw.dat,meta.data=overall.meta)
+
+```
+
+# Incorporate TCR and BCR into metadata, if present
+
+```{r,fig.width=7,fig.asp=0.618,out.width="70%",fig.align="center",linewidth=60}
+
+<<tcr_bcr_addition>>
 
 ```
 
